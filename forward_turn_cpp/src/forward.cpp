@@ -21,7 +21,7 @@ int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
 
-  auto node = std::make_shared<forward_turn_cpp::ForwardNode>();
+  auto node = std::make_shared<forward_turn_cpp::ForwardTurnNode>();
 
   rclcpp::spin(node);
 

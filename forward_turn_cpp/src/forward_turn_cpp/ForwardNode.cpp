@@ -30,20 +30,21 @@ using std::placeholders::_1;
 namespace forward_turn_cpp
 {
 
-ForwardNode::ForwardNode()
-: Node ("forward_node"),
-tf_buffer_(),
-tf_listener_(tf_buffer_)
+ForwardTurnNode::ForwardTurnNode()
+: Node("forward_node"),
+  tf_buffer_(),
+  tf_listener_(tf_buffer_)
 {
   linear_ = create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
+  angular_ = create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
   timer_pos_check_ = create_wall_timer(
-    50ms, std::bind(&ForwardNode::transform_callback, this));
+    50ms, std::bind(&ForwardTurnNode::transform_callback, this));
   timer_publish_ = create_wall_timer(
-    50ms, std::bind(&ForwardNode::linear_move, this));
+    50ms, std::bind(&ForwardTurnNode::linear_move, this));
 }
 
 void
-ForwardNode::transform_callback()
+ForwardTurnNode::transform_callback()
 {
   tf2::Stamped<tf2::Transform> odom2bf;
   std::string error;
@@ -54,31 +55,67 @@ ForwardNode::transform_callback()
 
     double x = odom2bf_msg.transform.translation.x;
     double y = odom2bf_msg.transform.translation.y;
-    
-    dist = sqrt(x * x + y * y);
 
-    RCLCPP_INFO(get_logger(), "Distance between odom and base_footprint: %f", dist);
+    dist_ = sqrt(x * x + y * y);
+    angle_ = atan2(y, x);
+
+    RCLCPP_INFO(get_logger(), "Distance between odom and base_footprint: %f", dist_);
   }
 }
 
 void
-ForwardNode::linear_move()
+ForwardTurnNode::linear_move()
 {
-  RCLCPP_INFO(get_logger(), "Distance: %f", dist);
-  if (dist < 1.0)
-  {
-    RCLCPP_INFO(get_logger(), "Moving forward!");
-    l_vel_.linear.x = MOVE_SPEED;
-    linear_->publish(l_vel_);
+  switch (state_) {
+    case FORWARD:
+      RCLCPP_INFO(get_logger(), "Moving forward!");
+      l_vel_.linear.x = MOVE_SPEED;
+      linear_->publish(l_vel_);
+
+      if (check_distance()) {
+        go_state(TURN);
+      }
+      break;
+
+    case TURN:
+      RCLCPP_INFO(get_logger(), "Rotating!");
+      a_vel_.angular.z = TURN_SPEED;
+      angular_->publish(a_vel_);
+
+      if (check_turn()) {
+        go_state(STOP);
+      }
+      break;
+
+    case STOP:
+      l_vel_.linear.x = STOP_SPEED;
+      a_vel_.angular.z = STOP_SPEED;
+      break;
   }
 
-  else
-  {
-    RCLCPP_INFO(get_logger(), "Stopping!");
-    l_vel_.linear.x = STOP_SPEED;
-    linear_->publish(l_vel_);
-  }
-  
+}
+
+void
+ForwardTurnNode::go_state(int new_state)
+{
+  l_vel_.linear.x = STOP_SPEED;
+  a_vel_.angular.z = STOP_SPEED;
+  linear_->publish(l_vel_);
+  angular_->publish(a_vel_);
+
+  state_ = new_state;
+}
+
+bool
+ForwardTurnNode::check_distance()
+{
+  return dist_ >= 1.0;
+}
+
+bool
+ForwardTurnNode::check_turn()
+{
+  return angle_ > M_PI / 2;
 }
 
 }  //  namespace forward_turn_cpp

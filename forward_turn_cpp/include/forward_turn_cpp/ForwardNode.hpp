@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef FORWARD_TURN_CPP__FORWARDNODE_HPP_
-#define FORWARD_TURN_CPP__FORWARDNODE_HPP_
+#ifndef FORWARD_TURN_CPP__FORWARDTURNNODE_HPP_
+#define FORWARD_TURN_CPP__FORWARDTURNNODE_HPP_
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/twist.hpp"
@@ -24,33 +24,46 @@
 namespace forward_turn_cpp
 {
 
-class ForwardNode : public rclcpp::Node
+class ForwardTurnNode : public rclcpp::Node
 {
 public:
-  ForwardNode();
+  ForwardTurnNode();
 
 private:
   void transform_callback();
   void linear_move();
 
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr linear_;
+  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr angular_;
 
   geometry_msgs::msg::Twist l_vel_;
-  
+  geometry_msgs::msg::Twist a_vel_;
+
   rclcpp::TimerBase::SharedPtr timer_pos_check_;
   rclcpp::TimerBase::SharedPtr timer_publish_;
 
-  float MOVE_SPEED = 0.3;
-  float STOP_SPEED = 0.0;
-  
+  const float MOVE_SPEED = 0.3;
+  const float TURN_SPEED = 0.3;
+  const float STOP_SPEED = 0.0;
+
   geometry_msgs::msg::TransformStamped transform_;
 
   tf2::BufferCore tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
 
-  double dist;
+  double dist_;
+  double angle_;
+
+  static const int FORWARD = 0;
+  static const int TURN = 1;
+  static const int STOP = 2;
+  int state_;
+
+  void go_state(int new_state);
+  bool check_distance();
+  bool check_turn();
 };
 
 }  //  namespace forward_turn_cpp
 
-#endif  // FORWARD_TURN_CPP__FORWARDNODE_HPP_
+#endif  // FORWARD_TURN_CPP__FORWARDTURNNODE_HPP_

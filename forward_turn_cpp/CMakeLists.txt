@@ -23,7 +23,6 @@ include_directories(include)
 
 add_library(${PROJECT_NAME} SHARED
   src/forward_turn_cpp/ForwardNode.cpp
-  src/forward_turn_cpp/TurnNode.cpp
 )
 ament_target_dependencies(${PROJECT_NAME} ${dependencies})
 
@@ -31,14 +30,9 @@ add_executable(forward src/forward.cpp)
 ament_target_dependencies(forward ${dependencies})
 target_link_libraries(forward ${PROJECT_NAME})
 
-add_executable(turn src/turn.cpp)
-ament_target_dependencies(turn ${dependencies})
-target_link_libraries(turn ${PROJECT_NAME})
-
 install(TARGETS
   ${PROJECT_NAME}
   forward
-  turn
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
