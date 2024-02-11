@@ -1,7 +1,7 @@
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-24ddc0f5d75046c5622901739e7c5dd533143b0c8e959d652212380cedb1ea36.svg)](https://classroom.github.com/a/uJohVe6m)
 # 2024-P3-ForwardTurn
 ## Introducción
-El objetivo de la practica es conseguir que el [Kobuki](http://kobuki.yujinrobot.com/about2/) avance exactamente 1m y luego gire pi/2 usando las tf como forma de comprobar la distancia y rotación
+El objetivo de la practica es conseguir que el [Kobuki]([http://kobuki.yujinrobot.com/about2/](https://robots.ros.org/kobuki/) avance exactamente 1m y luego gire pi/2 usando las tf como forma de comprobar la distancia y rotación
 
 ## Descrioción y procedimiento
 En esta práctica, he utilizado como bsae el paquete [**ASR_2024**](https://github.com/Docencia-fmrico/ASR_2024) proporcionado por [fmrico](https://github.com/fmrico).  
