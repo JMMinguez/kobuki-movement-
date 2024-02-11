@@ -49,23 +49,30 @@ ForwardTurnNode::transform_callback()
   tf2::Stamped<tf2::Transform> odom2bf;
   std::string error;
 
+  //  Gets the tf between 'odom' and 'base_footprint'
   if (tf_buffer_.canTransform("odom", "base_footprint", tf2::TimePointZero, &error)) {
     auto odom2bf_msg = tf_buffer_.lookupTransform(
       "odom", "base_footprint", tf2::TimePointZero);
 
+    //  Extracts the x and y coordinates from the obtained transformation.
     double x = odom2bf_msg.transform.translation.x;
     double y = odom2bf_msg.transform.translation.y;
 
-    dist_ = sqrt(x * x + y * y);
+    //  Calculate the distance between (0,0) and (x,y)
+    distance_ = sqrt(x * x + y * y);
+    //  Calculate the distance between (0,0) and (x,y)
     angle_ = atan2(y, x);
 
-    RCLCPP_INFO(get_logger(), "Distance between odom and base_footprint: %f", dist_);
+    RCLCPP_INFO(get_logger(), "Distance between odom and base_footprint: %f", distance_);
+    RCLCPP_INFO(get_logger(), "Angle between odom and base_footprint: %f", angle_);
+    RCLCPP_INFO(get_logger(), "Angle between odom and base_footprint: %f", turn_limit_);
   }
 }
 
 void
 ForwardTurnNode::linear_move()
 {
+  //  FSM
   switch (state_) {
     case FORWARD:
       RCLCPP_INFO(get_logger(), "Moving forward!");
@@ -88,6 +95,7 @@ ForwardTurnNode::linear_move()
       break;
 
     case STOP:
+      RCLCPP_INFO(get_logger(), "STOP!");
       l_vel_.linear.x = STOP_SPEED;
       a_vel_.angular.z = STOP_SPEED;
       break;
@@ -103,19 +111,22 @@ ForwardTurnNode::go_state(int new_state)
   linear_->publish(l_vel_);
   angular_->publish(a_vel_);
 
+  //  Change state
   state_ = new_state;
 }
 
 bool
 ForwardTurnNode::check_distance()
 {
-  return dist_ >= 1.0;
+  //  Check distance
+  return distance_ >= 1.0;
 }
 
 bool
 ForwardTurnNode::check_turn()
 {
-  return angle_ > M_PI / 2;
+  //  Check angle
+  return angle_ >= turn_limit_;
 }
 
 }  //  namespace forward_turn_cpp

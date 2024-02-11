@@ -32,36 +32,35 @@ public:
 private:
   void transform_callback();
   void linear_move();
+  void go_state(int new_state);
+  bool check_distance();
+  bool check_turn();
 
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr linear_;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr angular_;
 
   geometry_msgs::msg::Twist l_vel_;
   geometry_msgs::msg::Twist a_vel_;
+  geometry_msgs::msg::TransformStamped transform_;
 
   rclcpp::TimerBase::SharedPtr timer_pos_check_;
   rclcpp::TimerBase::SharedPtr timer_publish_;
+
+  tf2::BufferCore tf_buffer_;
+  tf2_ros::TransformListener tf_listener_;
 
   const float MOVE_SPEED = 0.3;
   const float TURN_SPEED = 0.3;
   const float STOP_SPEED = 0.0;
 
-  geometry_msgs::msg::TransformStamped transform_;
-
-  tf2::BufferCore tf_buffer_;
-  tf2_ros::TransformListener tf_listener_;
-
-  double dist_;
-  double angle_;
-
   static const int FORWARD = 0;
   static const int TURN = 1;
   static const int STOP = 2;
-  int state_;
 
-  void go_state(int new_state);
-  bool check_distance();
-  bool check_turn();
+  int state_;
+  double distance_;
+  double angle_;
+  float turn_limit_ = (M_PI / 2);
 };
 
 }  //  namespace forward_turn_cpp
