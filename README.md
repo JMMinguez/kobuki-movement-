@@ -6,7 +6,7 @@ El objetivo de la practica es conseguir que el [Kobuki](http://kobuki.yujinrobot
 ## Descrioción y procedimiento
 En esta práctica, he utilizado como bsae el paquete [**ASR_2024**](https://github.com/Docencia-fmrico/ASR_2024) proporcionado por [fmrico](https://github.com/fmrico).  
 
-El funciomnamiento principal del robot viene dado por una FSM (Finite States Machine) que va cambiando de entre 3 posibles estados: FORWARD, TURN y STOP.
+El funcionamiento principal del robot viene dado por una FSM (Finite States Machine) que va cambiando de entre 3 posibles estados: FORWARD, TURN y STOP.
 ```cpp
 switch (state_) {
     case FORWARD:
