@@ -60,7 +60,7 @@ ForwardTurnNode::transform_callback()
 
     //  Calculate the distance between (0,0) and (x,y)
     distance_ = sqrt(x * x + y * y);
-    //  Calculate the distance between (0,0) and (x,y)
+    //  Calculate the angle between (0,0) and (x,y)
     angle_ = atan2(y, x);
 
     RCLCPP_INFO(get_logger(), "Distance between odom and base_footprint: %f", distance_);
