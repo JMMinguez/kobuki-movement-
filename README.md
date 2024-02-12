@@ -36,7 +36,34 @@ if (tf_buffer_.canTransform("odom", "base_footprint", tf2::TimePointZero, &error
   auto odom2bf_msg = tf_buffer_.lookupTransform(
       "odom", "base_footprint", tf2::TimePointZero);
 ```
-  
+## Launcher y ejecucuión
+Como en esta práctica estabamos tratando con TFs he creido necesario implementar en el launcher lo siguiente:
+```python
+def generate_launch_description():
+    forward_turn_cpp_dir = get_package_share_directory('forward_turn_cpp')
+
+    rviz2_cmd = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        output='screen',
+        parameters=[
+            {'use_sim_time': True}
+        ],
+        arguments=['-d', [os.path.join(forward_turn_cpp_dir, 'config', 'forward.rviz')]],
+        )
+
+        ld = LaunchDescription()
+        ld.add_action(rviz2_cmd)
+
+        return ld
+```
+Así se abrirá el rviz y podremos estar viendo en todo momento las TFs.  
+
+Para ejecutar nuestro paquete debemos poner el la terminal de Linux
+```shell
+ros2 launch forward_turn_cpp launch.py
+```
 ## Videos demostración
 En este primer video se ve el funcionamiento de la maquina de estados, sin embargo aun no hace el TURN de manera correcta:
 
