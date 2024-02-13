@@ -14,6 +14,9 @@
 
 #include <chrono>
 
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Quaternion.h>
+
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
@@ -41,6 +44,7 @@ ForwardTurnNode::ForwardTurnNode()
     50ms, std::bind(&ForwardTurnNode::transform_callback, this));
   timer_publish_ = create_wall_timer(
     50ms, std::bind(&ForwardTurnNode::linear_move, this));
+
 }
 
 void
@@ -48,25 +52,46 @@ ForwardTurnNode::transform_callback()
 {
   tf2::Stamped<tf2::Transform> odom2bf;
   std::string error;
-
-  //  Gets the tf between 'odom' and 'base_footprint'
-  if (tf_buffer_.canTransform("odom", "base_footprint", tf2::TimePointZero, &error)) {
+  //  Gets the tf from 'odom' to 'base_footprint' at the start position
+  if (start_)
+  {
+    
+    if (tf_buffer_.canTransform("odom", "base_footprint", tf2::TimePointZero, &error)) {
     auto odom2bf_msg = tf_buffer_.lookupTransform(
       "odom", "base_footprint", tf2::TimePointZero);
+      tf2::fromMsg(odom2bf_msg, odom2bf);
+    }
+    start_ = !start_;
+  }
 
+  tf2::Transform odom2bf_inverse = odom2bf.inverse();
+  tf2::Stamped<tf2::Transform> odom2bf1;
+  
+  //  Gets the tf between 'odom' and actual 'base_footprint'
+  if (tf_buffer_.canTransform("odom", "base_footprint", tf2::TimePointZero, &error)) {
+    auto odom2bf1_msg = tf_buffer_.lookupTransform(
+      "odom", "base_footprint", tf2::TimePointZero);
+
+    tf2::fromMsg(odom2bf1_msg, odom2bf1);
+
+    // Gets the tf from start 'base_footprint' and actual 'base_footprint'
+    tf2::Transform bf2bf1 = odom2bf_inverse * odom2bf1;
+    
     //  Extracts the x and y coordinates from the obtained transformation.
-    double x = odom2bf_msg.transform.translation.x;
-    double y = odom2bf_msg.transform.translation.y;
+    double x = bf2bf1.getOrigin().x();
+    double y = bf2bf1.getOrigin().y();
 
     //  Calculate the distance between (0,0) and (x,y)
     distance_ = sqrt(x * x + y * y);
     //  Calculate the angle between (0,0) and (x,y)
-    angle_ = atan2(y, x);
+    tf2::Matrix3x3 mat(bf2bf1.getRotation());
+    mat.getRPY(roll_, pitch_, yaw_);
 
     RCLCPP_INFO(get_logger(), "Distance between odom and base_footprint: %f", distance_);
-    RCLCPP_INFO(get_logger(), "Angle between odom and base_footprint: %f", angle_);
+    RCLCPP_INFO(get_logger(), "Angle between odom and base_footprint: %f", yaw_);
     RCLCPP_INFO(get_logger(), "Angle between odom and base_footprint: %f", turn_limit_);
   }
+  
 }
 
 void
@@ -126,7 +151,7 @@ bool
 ForwardTurnNode::check_turn()
 {
   //  Check angle
-  return angle_ >= turn_limit_;
+  return yaw_ <= turn_limit_ ;
 }
 
 }  //  namespace forward_turn_cpp

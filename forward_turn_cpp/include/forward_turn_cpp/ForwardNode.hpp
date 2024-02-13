@@ -20,6 +20,8 @@
 #include "tf2_ros/transform_broadcaster.h"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "tf2_ros/transform_listener.h"
+#include "tf2/transform_datatypes.h"
+
 
 namespace forward_turn_cpp
 {
@@ -45,12 +47,12 @@ private:
 
   rclcpp::TimerBase::SharedPtr timer_pos_check_;
   rclcpp::TimerBase::SharedPtr timer_publish_;
-
+  
   tf2::BufferCore tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
-
+  
   const float MOVE_SPEED = 0.3;
-  const float TURN_SPEED = 0.3;
+  const float TURN_SPEED = -0.3;
   const float STOP_SPEED = 0.0;
 
   static const int FORWARD = 0;
@@ -58,9 +60,10 @@ private:
   static const int STOP = 2;
 
   int state_;
-  double distance_;
-  double angle_;
-  float turn_limit_ = (M_PI / 2);
+  bool start_;
+  double distance_, angle_;
+  double turn_limit_ = M_PI / 2;
+  double roll_, pitch_, yaw_;
 };
 
 }  //  namespace forward_turn_cpp

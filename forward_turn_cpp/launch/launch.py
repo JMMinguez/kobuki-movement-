@@ -22,6 +22,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 
 def generate_launch_description():
+    forward_turn_cpp_dir = get_package_share_directory('forward_turn_cpp')
     forward_turn_cmd = Node(
         package='forward_turn_cpp',
         executable='forward',
@@ -33,7 +34,19 @@ def generate_launch_description():
         ]
     )
 
+    rviz2_cmd = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        output='screen',
+        parameters=[
+            {'use_sim_time': True}
+        ],
+        arguments=['-d', [os.path.join(forward_turn_cpp_dir, 'config', 'forward.rviz')]],
+        )
+
     ld = LaunchDescription()
     ld.add_action(forward_turn_cmd)
+    ld.add_action(rviz2_cmd)
 
     return ld
