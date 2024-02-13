@@ -27,7 +27,7 @@ switch (state_) {
 ```
 ![Diagrama_FSM](https://github.com/Docencia-fmrico/p3-forwardturn-jmartinm2021/assets/92941332/10f33708-1f11-4492-abcd-7083a98e1fa9)
   
-Y para medir la distancia desde el origen así como la rotación del robot he usado la Tf `odom`->`base_footprint`  
+Y para medir la distancia desde el origen así como la rotación del robot he usado la Tf `odom`->`base_footprint`, este metodo solo funciona si ejectuamos el paquete una vez ya que si no habria que apagar y encender el robot de nuevo para reiniciar odom
 ```cpp
 tf2::Stamped<tf2::Transform> odom2bf;
 std::string error;
@@ -35,6 +35,36 @@ std::string error;
 if (tf_buffer_.canTransform("odom", "base_footprint", tf2::TimePointZero, &error)) {
   auto odom2bf_msg = tf_buffer_.lookupTransform(
       "odom", "base_footprint", tf2::TimePointZero);
+```
+
+Sin embargo podemos guardar la posicion inicial cada vez que ejecutamos el programa y calcular la posicion en función esa posición inicial y el 'base_footprint' actual de la siguiente forma: bf2bf1 = bf2odom * odom2bf1
+```cpp
+tf2::Stamped<tf2::Transform> odom2bf;
+  std::string error;
+  //  Gets the tf from 'odom' to 'base_footprint' at the start position
+  if (start_)
+  {
+    
+    if (tf_buffer_.canTransform("odom", "base_footprint", tf2::TimePointZero, &error)) {
+    auto odom2bf_msg = tf_buffer_.lookupTransform(
+      "odom", "base_footprint", tf2::TimePointZero);
+      tf2::fromMsg(odom2bf_msg, odom2bf);
+    }
+    start_ = !start_;
+  }
+
+  tf2::Transform odom2bf_inverse = odom2bf.inverse();
+  tf2::Stamped<tf2::Transform> odom2bf1;
+  
+  //  Gets the tf between 'odom' and actual 'base_footprint'
+  if (tf_buffer_.canTransform("odom", "base_footprint", tf2::TimePointZero, &error)) {
+    auto odom2bf1_msg = tf_buffer_.lookupTransform(
+      "odom", "base_footprint", tf2::TimePointZero);
+
+    tf2::fromMsg(odom2bf1_msg, odom2bf1);
+
+    // Gets the tf from start 'base_footprint' and actual 'base_footprint'
+    tf2::Transform bf2bf1 = odom2bf_inverse * odom2bf1;
 ```
 ## Launcher y ejecucuión
 Como en esta práctica estabamos tratando con TFs he creido necesario implementar en el launcher lo siguiente:
